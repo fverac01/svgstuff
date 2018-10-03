@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<script lang="javascript" src="js/jquery-3.1.0.min.js"></script>
+	<script lang="javascript" src="js/d3.min.js"></script>
+	<style>
+		html, body {
+			padding: 0;
+			margin: 0;
+		}
+	</style>
+</head>
+<body>
+	
+	<script>
+		var dimension = 1500;
+
+		var svg = d3.select('body').append('svg')
+			.attr('width', dimension)
+			.attr('height', dimension)
+			.style('background-color', 'black');
+
+		// YOUR CODE SHOULD START HERE
+		/*
+		 * Name: Fabio Vera
+		 * Word: aligned!
+		 */
+
+		startr = dimension /20
+		r = startr
+		svg.append("circle")
+			.attr("id", "hi")
+			.attr("cx", dimension/2)
+			.attr("cy", dimension/2)
+			.attr("r", r)
+			.attr("fill", "white");
+		
+		count = 0; 
+		svg.on("click",function(d){
+
+			//mouse coordinates
+			coords =  d3.mouse(this)
+			coordx = coords[0]
+			coordy = coords[1]
+
+			//primary circle coordinates
+			cirx = svg.select("#hi").attr("cx")
+			ciry = svg.select("#hi").attr("cy")
+			cirx = Number(cirx)
+			ciry = Number(ciry)
+			
+			//add new smaller rectangles
+			rectangle = svg.append("rect")
+                .attr("x", count2coord(count) )
+                .attr("y", count2coord(count)  )
+                .attr("width", dimension/countexp(count) )
+                .attr("height", dimension/countexp(count) )
+                .attr("fill", blackwhitecircle(count+1));
+            
+            r= r/2
+			if (count < 8)  {
+			svg.append("circle")
+			.attr("id", "boi" + count.toString() )
+			.attr("cx", count2circ(count,cirx,ciry)[0] )
+			.attr("cy", count2circ(count,cirx,ciry)[1] )
+			.attr("r", r)
+			.attr("fill", blackwhitecircle(count) ); // "white");
+			}
+			count++;
+
+
+
+			//calculates final end point if circle moved in direction of mouse until it hit the boundary
+			var run = coordx - cirx
+			var rise = coordy - ciry
+			var slope = rise/run
+			var targetx = dimension
+			var targety = dimension
+			if (run < 0) 
+				targetx = 0
+
+			if (rise < 0)
+				targety = 0
+
+			var howmanyx = (targetx-cirx)/run
+			var howmanyy = (targety-ciry)/rise
+
+			boundy = 0
+			boundx = 0
+			if (howmanyx < howmanyy) {
+				
+				boundx = targetx
+				boundy = slope*(targetx-cirx)
+				boundy = boundy + ciry
+			
+			}
+
+			else {
+				boundy = targety
+				boundx = (targety - ciry)/slope + cirx
+			}
+
+
+
+			//removing and readding primary circle to ensure on top of newly added rectangles
+			svg.select("#hi").remove();
+			svg.append("circle")
+				.attr("id", "hi")
+				.attr("cx", cirx)
+				.attr("cy", ciry)
+				.attr("r", startr)
+				.attr("fill", "white");	
+
+			//moving primary circle
+			svg.select("#hi").transition().attr("cx",boundx).attr("cy",boundy).attr("fill", "black").duration(1000);
+			svg.select("#hi").transition().attr("cx",dimension/2).attr("cy",dimension/2).attr("fill","white").delay(1000).duration(1000);
+
+			//commanding all other circles!
+			for (var i = 0; i < count; i++) {
+				//removing and readding circles to ensure on top of rectangles
+   				 svg.select("#boi" + i.toString()).remove();
+   				 svg.append("circle")
+					.attr("id", "boi" + i.toString() )
+					.attr("cx", count2circ(i,cirx,ciry)[0] )
+					.attr("cy", count2circ(i,cirx,ciry)[1] )
+					.attr("r", count2r(i) )
+					.attr("fill", blackwhitecircle(i) );
+				//moving and recentering all circles
+   				 svg.select("#boi" + i.toString() ).transition().attr("cx", count2circ(i,boundx, boundy)[0])
+   				 .attr("cy", count2circ(i,boundx, boundy)[1]).attr("fill",blackwhitecircle(i+1) ).duration(1000);
+
+   				 svg.select("#boi" + i.toString() ).transition().attr("cx", count2coord(i) + dimension/countexp(i+1) )
+   				 .attr("cy", count2coord(i) + dimension/countexp(i+1) ).attr("fill", blackwhitecircle(i)).delay(1000).duration(1000);
+			
+			} 
+		
+
+		})
+
+		//given count returns black or white
+		function blackwhitecircle(count) {
+			if (count % 2)
+				return "white"
+
+			return "black"
+		}
+
+		//given count returns starting coordinates of associated rectangle
+		function count2coord(count) {
+			if (count > 0) {
+				if (count%2) {
+					return dimension/countexp(count) + count2coord(count-1)
+				}
+				else 
+					return count2coord(count-1)
+
+			}
+			
+			return 0
+
+		}
+
+		//given count returns 2^(count+1)
+		function countexp(count) {
+			if (count > 0)
+				return countexp(count-1) * 2
+
+			return 2
+		}
+
+		//given count and (xoo,yoo) i.e. coords of primary circle, returns coordinates of circle associated
+		//with count
+		function count2circ(count, xoo, yoo) {
+			xx = xoo
+			yy = yoo
+			
+			if (count % 2 ==0) {
+				var xx = dimension - xoo
+				var yy = dimension - yoo
+			} 
+
+			xx = ( xx / countexp(count) ) + count2coord(count)
+			yy = (yy / countexp(count) ) + count2coord(count)
+
+			return [xx,yy]
+
+		}
+
+		//given count returns r of associated circle
+		function count2r(count) {
+			if (count > 0)
+				return count2r(count-1)/2
+
+			return startr/2
+
+		}
+
+
+		// YOUR CODE SHOULD END HERE
+	</script>
+</body>
+</html>
